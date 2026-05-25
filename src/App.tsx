@@ -152,7 +152,9 @@ export default function App() {
       <header className="app-header">
         <div>
           <h1>{project.title}</h1>
-          <p className="subtitle">Drag bars to reschedule · edit tasks in the sidebar · auto-saved in browser</p>
+          <p className="subtitle">
+            Drag bars to reschedule · click a bar or task to edit · auto-saved in browser
+          </p>
         </div>
         <div className="header-actions">
           <select value={viewMode} onChange={(e) => setViewMode(e.target.value as typeof viewMode)}>
@@ -231,6 +233,7 @@ export default function App() {
               viewMode={viewMode}
               onDateChange={handleDrag}
               onProgressChange={handleProgress}
+              onTaskClick={setSelectedId}
             />
           ) : (
             <p className="empty-chart">Fix schedule errors to view the chart.</p>

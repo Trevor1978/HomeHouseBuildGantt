@@ -31,40 +31,9 @@ export function TaskEditor({
         </button>
       </div>
 
-      <div className="task-sections">
-        {project.sections.map((section) => {
-          const sectionTasks = project.tasks.filter((t) => t.section === section);
-          return (
-            <div key={section} className="task-section-block">
-              <div className="task-section-title">
-                <span>{section}</span>
-                <button type="button" className="btn btn-small" onClick={() => onAdd(section)}>
-                  + Task
-                </button>
-              </div>
-              <ul className="task-list">
-                {sectionTasks.map((task) => (
-                  <li key={task.id}>
-                    <button
-                      type="button"
-                      className={`task-list-item ${selectedId === task.id ? "active" : ""}`}
-                      onClick={() => onSelect(task.id)}
-                    >
-                      <span className="task-id">{task.id}</span>
-                      <span className="task-name">{task.name}</span>
-                      <span className="task-meta">{task.durationDays}d</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-        })}
-      </div>
-
       {selected && (
         <form
-          className="task-form"
+          className="task-form task-form-top"
           onSubmit={(e) => {
             e.preventDefault();
           }}
@@ -159,7 +128,9 @@ export function TaskEditor({
                   onUpdate({
                     ...selected,
                     startDate: undefined,
-                    dependencies: selected.dependencies.length ? selected.dependencies : [taskIds[0] ?? ""].filter(Boolean),
+                    dependencies: selected.dependencies.length
+                      ? selected.dependencies
+                      : [taskIds[0] ?? ""].filter(Boolean),
                   })
                 }
               />
@@ -192,6 +163,39 @@ export function TaskEditor({
           </button>
         </form>
       )}
+
+      <div className="task-editor-list">
+      <div className="task-sections">
+        {project.sections.map((section) => {
+          const sectionTasks = project.tasks.filter((t) => t.section === section);
+          return (
+            <div key={section} className="task-section-block">
+              <div className="task-section-title">
+                <span>{section}</span>
+                <button type="button" className="btn btn-small" onClick={() => onAdd(section)}>
+                  + Task
+                </button>
+              </div>
+              <ul className="task-list">
+                {sectionTasks.map((task) => (
+                  <li key={task.id}>
+                    <button
+                      type="button"
+                      className={`task-list-item ${selectedId === task.id ? "active" : ""}`}
+                      onClick={() => onSelect(task.id)}
+                    >
+                      <span className="task-id">{task.id}</span>
+                      <span className="task-name">{task.name}</span>
+                      <span className="task-meta">{task.durationDays}d</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+      </div>
     </aside>
   );
 }

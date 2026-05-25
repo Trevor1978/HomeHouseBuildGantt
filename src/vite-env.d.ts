@@ -15,8 +15,12 @@ declare module "frappe-gantt" {
     view_mode?: "Quarter Day" | "Half Day" | "Day" | "Week" | "Month";
     bar_height?: number;
     padding?: number;
+    infinite_padding?: boolean;
+    scroll_to?: "today" | "start" | "end" | string | null;
+    container_height?: number | "auto";
     on_date_change?: (task: FrappeTask, start: Date, end: Date) => void;
     on_progress_change?: (task: FrappeTask, progress: number) => void;
+    on_click?: (task: FrappeTask) => void;
   }
 
   export default class Gantt {
@@ -25,7 +29,8 @@ declare module "frappe-gantt" {
       tasks: FrappeTask[],
       options?: GanttOptions
     );
-    change_view_mode(mode: GanttOptions["view_mode"]): void;
+    options: GanttOptions & { container_height?: number | "auto" };
+    change_view_mode(mode?: GanttOptions["view_mode"], maintainPos?: boolean): void;
     refresh(tasks: FrappeTask[]): void;
   }
 }
