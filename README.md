@@ -25,8 +25,8 @@ Open http://localhost:5173
 1. Push this repo to Git (GitHub, Gitea, etc.).
 2. In Coolify, create a new **Application** → **Dockerfile** build pack.
 3. Point it at this repository; build context is the repo root.
-4. Set **Ports Exposes** to **3100** (matches the container; no need to use host port 80).
-5. Map to the host only if you need direct access, e.g. `13100:3100` — pick any free host port. The Cloudflare tunnel should target that host port, not 80.
+4. Set **Ports Exposes** to **3100** (must match nginx inside the container).
+5. Set **Ports Mappings** to **`3100:3100`** (or `13100:3100` if 3100 is taken on the host). **Required for Cloudflare tunnel** — without this, `curl http://127.0.0.1:3100` on the VM will fail even when the app is healthy.
 5. Deploy. No runtime env vars required.
 
 ### Cloudflare Tunnel
@@ -74,8 +74,9 @@ If the browser shows a redirect loop, the response is coming from **Cloudflare**
 #### Ports (no conflict with other apps on :80 or :3000)
 
 - The container listens on **3100** internally (nginx). It does **not** require host port 80.
-- In Coolify: **Ports Exposes** = `3100`. Use **Ports Mappings** like `13100:3100` if you want a fixed host port — choose any free port.
-- Point the Cloudflare tunnel at **`http://127.0.0.1:13100`** (mapped host port) or whatever Coolify shows after deploy — **not** `https://gantt.pureautomation.com.au`.
+- In Coolify: **Ports Exposes** = `3100` and **Ports Mappings** = `3100:3100` (host:container). If host 3100 is busy, use `13100:3100` and point the tunnel at port **13100**.
+- Point the Cloudflare tunnel at **`http://127.0.0.1:3100`** (left side of the mapping) — **not** `https://gantt.pureautomation.com.au`.
+- **Ports Exposes alone does not open the host port** — that is why `curl http://127.0.0.1:3100` fails until mappings are set.
 - Remove the Coolify public FQDN if you only use the tunnel, to avoid HTTPS redirect loops with Traefik.
 
 ## Data persistence

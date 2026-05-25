@@ -300,6 +300,8 @@ body {
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
   overflow: hidden;
+  /* Completed / in-progress portion of task bars */
+  --g-progress-color: #b7e4c7;
 }
 
 /* Frappe creates .gantt-container inside .gantt-mount — sole scroll surface for the chart */
