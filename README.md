@@ -25,8 +25,8 @@ Open http://localhost:5173
 1. Push this repo to Git (GitHub, Gitea, etc.).
 2. In Coolify, create a new **Application** → **Dockerfile** build pack.
 3. Point it at this repository; build context is the repo root.
-4. Set **Ports Exposes** to **3000** (matches the container; no need to use host port 80).
-5. Map to the host only if you need direct access, e.g. `13080:3000` — pick any free host port. The Cloudflare tunnel should target that host port, not 80.
+4. Set **Ports Exposes** to **3100** (matches the container; no need to use host port 80).
+5. Map to the host only if you need direct access, e.g. `13100:3100` — pick any free host port. The Cloudflare tunnel should target that host port, not 80.
 5. Deploy. No runtime env vars required.
 
 ### Cloudflare Tunnel
@@ -56,7 +56,7 @@ In Zero Trust → **Networks** → **Tunnels** → your tunnel → **Public Host
 |--------|--------|
 | Subdomain | `gantt` (or full hostname) |
 | Service type | HTTP |
-| URL | `127.0.0.1:3000` or `127.0.0.1:<host-port>` from Coolify’s port mapping (see below) |
+| URL | `127.0.0.1:3100` or `127.0.0.1:<host-port>` from Coolify’s port mapping (see below) |
 
 **Tip:** Restrict access with Cloudflare Access (email OTP, Google, etc.) since the app has no built-in auth.
 
@@ -69,13 +69,13 @@ If the browser shows a redirect loop, the response is coming from **Cloudflare**
 3. **Cloudflare SSL** — for tunnel-only origins use **Full** or **Full (strict)**; avoid **Flexible** if anything on the path redirects to HTTPS.
 4. **Redirect Rules** — Zero Trust / zone **Rules** → check nothing rewrites `gantt.pureautomation.com.au` to the same URL.
 5. **Access** — if enabled, temporarily disable the Access application for this hostname to test; misconfigured Access can 307-loop before the app loads.
-6. **Verify origin** — on the server: `curl -I http://127.0.0.1:3000/` (or your mapped host port) should return `200` and `text/html`, not `307`.
+6. **Verify origin** — on the server: `curl -I http://127.0.0.1:3100/` (or your mapped host port) should return `200` and `text/html`, not `307`.
 
-#### Ports (no conflict with other apps on :80)
+#### Ports (no conflict with other apps on :80 or :3000)
 
-- The container listens on **3000** internally (nginx). It does **not** require host port 80.
-- In Coolify: **Ports Exposes** = `3000`. Use **Ports Mappings** like `13080:3000` if you want a fixed host port — choose any free port.
-- Point the Cloudflare tunnel at **`http://127.0.0.1:13080`** (mapped host port) or whatever Coolify shows after deploy — **not** `https://gantt.pureautomation.com.au`.
+- The container listens on **3100** internally (nginx). It does **not** require host port 80.
+- In Coolify: **Ports Exposes** = `3100`. Use **Ports Mappings** like `13100:3100` if you want a fixed host port — choose any free port.
+- Point the Cloudflare tunnel at **`http://127.0.0.1:13100`** (mapped host port) or whatever Coolify shows after deploy — **not** `https://gantt.pureautomation.com.au`.
 - Remove the Coolify public FQDN if you only use the tunnel, to avoid HTTPS redirect loops with Traefik.
 
 ## Data persistence
