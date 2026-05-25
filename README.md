@@ -25,24 +25,58 @@ Open http://localhost:5173
 1. Push this repo to Git (GitHub, Gitea, etc.).
 2. In Coolify, create a new **Application** → **Dockerfile** build pack.
 3. Point it at this repository; build context is the repo root.
-4. Expose port **80** (container) — Coolify will map it as needed.
+4. Set **Ports Exposes** to **3000** (matches the container; no need to use host port 80).
+5. Map to the host only if you need direct access, e.g. `13080:3000` — pick any free host port. The Cloudflare tunnel should target that host port, not 80.
 5. Deploy. No runtime env vars required.
 
 ### Cloudflare Tunnel
 
-Run `cloudflared` on the same host as Coolify (or wherever the container is reachable):
+Run `cloudflared` on the same host as Coolify (or wherever the container is reachable).
+
+**Critical:** the tunnel `service` must be the **internal origin** (HTTP to the container), never the public hostname:
 
 ```yaml
-# Example tunnel ingress (cloudflared config.yml)
+# cloudflared config.yml — correct
 ingress:
-  - hostname: gantt.yourdomain.com
-    service: http://localhost:<coolify-assigned-port>
+  - hostname: gantt.pureautomation.com.au
+    service: http://127.0.0.1:<coolify-published-port>   # or http://<container-ip>:80
   - service: http_status:404
 ```
 
-In Cloudflare Zero Trust → Tunnels, create a public hostname pointing at the Coolify service URL (often `http://127.0.0.1:<port>` on the server).
+```yaml
+# WRONG — causes ERR_TOO_MANY_REDIRECTS (307 loop)
+ingress:
+  - hostname: gantt.pureautomation.com.au
+    service: https://gantt.pureautomation.com.au   # do not point the tunnel at itself
+```
+
+In Zero Trust → **Networks** → **Tunnels** → your tunnel → **Public Hostname**, set:
+
+| Field | Value |
+|--------|--------|
+| Subdomain | `gantt` (or full hostname) |
+| Service type | HTTP |
+| URL | `127.0.0.1:3000` or `127.0.0.1:<host-port>` from Coolify’s port mapping (see below) |
 
 **Tip:** Restrict access with Cloudflare Access (email OTP, Google, etc.) since the app has no built-in auth.
+
+#### ERR_TOO_MANY_REDIRECTS
+
+If the browser shows a redirect loop, the response is coming from **Cloudflare** (not this app — nginx only serves static files, no redirects).
+
+1. **Tunnel service URL** — must be `http://127.0.0.1:<port>` or Coolify’s internal HTTP URL, not `https://gantt.pureautomation.com.au`.
+2. **Coolify** — if the app is only reached via the tunnel, turn off extra “Force HTTPS” / redirect middleware on this service (Cloudflare edge already serves HTTPS).
+3. **Cloudflare SSL** — for tunnel-only origins use **Full** or **Full (strict)**; avoid **Flexible** if anything on the path redirects to HTTPS.
+4. **Redirect Rules** — Zero Trust / zone **Rules** → check nothing rewrites `gantt.pureautomation.com.au` to the same URL.
+5. **Access** — if enabled, temporarily disable the Access application for this hostname to test; misconfigured Access can 307-loop before the app loads.
+6. **Verify origin** — on the server: `curl -I http://127.0.0.1:3000/` (or your mapped host port) should return `200` and `text/html`, not `307`.
+
+#### Ports (no conflict with other apps on :80)
+
+- The container listens on **3000** internally (nginx). It does **not** require host port 80.
+- In Coolify: **Ports Exposes** = `3000`. Use **Ports Mappings** like `13080:3000` if you want a fixed host port — choose any free port.
+- Point the Cloudflare tunnel at **`http://127.0.0.1:13080`** (mapped host port) or whatever Coolify shows after deploy — **not** `https://gantt.pureautomation.com.au`.
+- Remove the Coolify public FQDN if you only use the tunnel, to avoid HTTPS redirect loops with Traefik.
 
 ## Data persistence
 
