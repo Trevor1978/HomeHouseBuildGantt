@@ -137,24 +137,43 @@ export function TaskEditor({
               After dependency
             </label>
             {!selected.startDate && (
-              <select
-                value={selected.dependencies[0] ?? ""}
-                onChange={(e) =>
-                  onUpdate({
-                    ...selected,
-                    dependencies: e.target.value ? [e.target.value] : [],
-                  })
-                }
-              >
-                <option value="">— select —</option>
-                {taskIds
-                  .filter((id) => id !== selected.id)
-                  .map((id) => (
-                    <option key={id} value={id}>
-                      {id}
-                    </option>
-                  ))}
-              </select>
+              <>
+                <label>
+                  Depends on
+                  <select
+                    value={selected.dependencies[0] ?? ""}
+                    onChange={(e) =>
+                      onUpdate({
+                        ...selected,
+                        dependencies: e.target.value ? [e.target.value] : [],
+                      })
+                    }
+                  >
+                    <option value="">— select —</option>
+                    {taskIds
+                      .filter((id) => id !== selected.id)
+                      .map((id) => (
+                        <option key={id} value={id}>
+                          {id}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                <label>
+                  Days after dependency ends
+                  <input
+                    type="number"
+                    min={0}
+                    value={selected.lagDays ?? 0}
+                    onChange={(e) =>
+                      onUpdate({
+                        ...selected,
+                        lagDays: Math.max(0, Number(e.target.value) || 0),
+                      })
+                    }
+                  />
+                </label>
+              </>
             )}
           </fieldset>
 
@@ -186,7 +205,10 @@ export function TaskEditor({
                     >
                       <span className="task-id">{task.id}</span>
                       <span className="task-name">{task.name}</span>
-                      <span className="task-meta">{task.durationDays}d</span>
+                      <span className="task-meta">
+                        {task.durationDays}d
+                        {!task.startDate && (task.lagDays ?? 0) > 0 ? ` +${task.lagDays}d` : ""}
+                      </span>
                     </button>
                   </li>
                 ))}

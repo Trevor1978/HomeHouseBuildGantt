@@ -97,6 +97,7 @@ export default function App() {
       section,
       durationDays: 3,
       dependencies: project.tasks[0] ? [project.tasks[0].id] : [],
+      lagDays: 0,
       progress: 0,
     };
     updateProject({ ...project, tasks: [...project.tasks, task] });

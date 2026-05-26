@@ -28,7 +28,8 @@ export function computeSchedule(project: GanttProject): ScheduledTask[] {
         const depStart = resolveStart(dep);
         return addDays(depStart, dep.durationDays);
       });
-      start = maxDate(...depEnds);
+      const lag = Math.max(0, task.lagDays ?? 0);
+      start = addDays(maxDate(...depEnds), lag);
     }
 
     visiting.delete(task.id);

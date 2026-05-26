@@ -20,6 +20,13 @@ function parseTaskLine(line: string, section: string): GanttTask | null {
   const durationPart = parts[2] ?? "1d";
   const durationDays = parseInt(durationPart.replace(/d$/i, ""), 10) || 1;
 
+  let lagDays = 0;
+  const lagPart = parts[3];
+  if (lagPart) {
+    const lagMatch = lagPart.match(/^\+?(\d+)\s*d?$/i);
+    if (lagMatch) lagDays = Math.max(0, parseInt(lagMatch[1], 10) || 0);
+  }
+
   let startDate: string | undefined;
   const dependencies: string[] = [];
 
@@ -37,6 +44,7 @@ function parseTaskLine(line: string, section: string): GanttTask | null {
     startDate,
     durationDays,
     dependencies,
+    lagDays,
     progress: 0,
   };
 }
@@ -107,7 +115,9 @@ export function toMermaid(project: GanttProject): string {
       if (task.startDate) {
         schedule = `${task.startDate}, ${task.durationDays}d`;
       } else if (task.dependencies.length > 0) {
-        schedule = `after ${task.dependencies[0]}, ${task.durationDays}d`;
+        const lag = task.lagDays ?? 0;
+        const lagSuffix = lag > 0 ? `, +${lag}d` : "";
+        schedule = `after ${task.dependencies[0]}, ${task.durationDays}d${lagSuffix}`;
       } else {
         schedule = `2026-01-01, ${task.durationDays}d`;
       }

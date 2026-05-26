@@ -7,6 +7,8 @@ export interface GanttTask {
   durationDays: number;
   /** Task ids this task starts after (Mermaid "after" deps). */
   dependencies: string[];
+  /** Days after the latest dependency ends before this task starts (dependency mode only). */
+  lagDays: number;
   progress: number;
 }
 
