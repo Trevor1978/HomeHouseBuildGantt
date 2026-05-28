@@ -29,3 +29,27 @@ export function loadProject(fallback: GanttProject): GanttProject {
 export function saveProject(project: GanttProject): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(project));
 }
+
+export async function loadServerProject(): Promise<GanttProject | null> {
+  try {
+    const response = await fetch("/api/project", { cache: "no-store" });
+    if (response.status === 204) return null;
+    if (!response.ok) return null;
+    const parsed = (await response.json()) as GanttProject;
+    return normalizeProject(parsed);
+  } catch {
+    return null;
+  }
+}
+
+export async function saveServerProject(project: GanttProject): Promise<void> {
+  try {
+    await fetch("/api/project", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(project),
+    });
+  } catch {
+    // Keep local storage as the fallback if the server is unavailable.
+  }
+}

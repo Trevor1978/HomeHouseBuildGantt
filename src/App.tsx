@@ -4,7 +4,7 @@ import { TaskEditor } from "./components/TaskEditor";
 import { DEFAULT_PROJECT, INITIAL_MERMAID } from "./initialData";
 import { parseMermaid, toMermaid } from "./mermaid";
 import { applyDragDates, computeSchedule } from "./schedule";
-import { loadProject, saveProject } from "./storage";
+import { loadProject, loadServerProject, saveProject, saveServerProject } from "./storage";
 import type { GanttProject, GanttTask } from "./types";
 import "./App.css";
 
@@ -24,6 +24,7 @@ export default function App() {
   const [mermaidText, setMermaidText] = useState(INITIAL_MERMAID);
   const [showMermaid, setShowMermaid] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
   const scheduleResult = useMemo(() => {
     try {
@@ -40,8 +41,28 @@ export default function App() {
   const displayError = error ?? scheduleError;
 
   useEffect(() => {
+    let cancelled = false;
+    const hydrate = async () => {
+      const serverProject = await loadServerProject();
+      if (cancelled) return;
+      if (serverProject) {
+        setProject(serverProject);
+        setSelectedId(serverProject.tasks[0]?.id ?? null);
+        setMermaidText(toMermaid(serverProject));
+      }
+      setHydrated(true);
+    };
+    void hydrate();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
     saveProject(project);
-  }, [project]);
+    void saveServerProject(project);
+  }, [project, hydrated]);
 
   const updateProject = useCallback((next: GanttProject) => {
     setProject(next);

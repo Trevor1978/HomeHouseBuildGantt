@@ -27,7 +27,10 @@ Open http://localhost:5173
 3. Point it at this repository; build context is the repo root.
 4. Set **Ports Exposes** to **3100** (must match nginx inside the container).
 5. Set **Ports Mappings** to **`3100:3100`** (or `13100:3100` if 3100 is taken on the host). **Required for Cloudflare tunnel** — without this, `curl http://127.0.0.1:3100` on the VM will fail even when the app is healthy.
-5. Deploy. No runtime env vars required.
+5. Add a **Persistent Storage** mount in Coolify:
+   - Mount path: `/data`
+   - Keep default volume settings (or choose a named volume)
+6. Deploy. No runtime env vars required.
 
 ### Cloudflare Tunnel
 
@@ -81,10 +84,15 @@ If the browser shows a redirect loop, the response is coming from **Cloudflare**
 
 ## Data persistence
 
-Edits are stored in each browser’s `localStorage`. Use **Export JSON** before clearing cache or switching devices. For shared team storage, mount a volume and add a small API later — the JSON export format is the source of truth.
+Edits are now saved in two places:
+
+- Browser `localStorage` (fast local fallback)
+- Server file at `/data/project.json` via `/api/project` (survives redeploys when `/data` is a persistent volume)
+
+If `/data` is not mounted as persistent storage, changes can still be lost when the container is recreated. Use **Export JSON** for manual backups.
 
 ## Stack
 
 - React + Vite + TypeScript
 - [Frappe Gantt](https://github.com/frappe/gantt) for the chart
-- nginx (Alpine) in production Docker image
+- Node.js runtime serving static files + `/api/project`
