@@ -1,0 +1,15 @@
+services:
+  home-house-build-gantt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: home-house-build-gantt:latest
+    container_name: home-house-build-gantt
+    ports:
+      - "3100:3100"
+    volumes:
+      - gantt_data:/data
+    restart: unless-stopped
+
+volumes:
+  gantt_data:

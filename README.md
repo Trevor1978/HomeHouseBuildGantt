@@ -82,6 +82,19 @@ If the browser shows a redirect loop, the response is coming from **Cloudflare**
 - **Ports Exposes alone does not open the host port** — that is why `curl http://127.0.0.1:3100` fails until mappings are set.
 - Remove the Coolify public FQDN if you only use the tunnel, to avoid HTTPS redirect loops with Traefik.
 
+### Docker Compose (automated persistent mount)
+
+This repo now includes `docker-compose.yml` with a named volume:
+
+- Service mount: `gantt_data:/data`
+- Result: `/data/project.json` survives container rebuild/redeploy automatically
+
+Run:
+
+```bash
+docker compose up -d --build
+```
+
 ## Data persistence
 
 Edits are now saved in two places:
