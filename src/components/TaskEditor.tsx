@@ -1,3 +1,6 @@
+import { useState } from "react";
+import type { InsertPosition } from "../taskOrder";
+import { canMoveTask } from "../taskOrder";
 import type { GanttProject, GanttTask } from "../types";
 
 interface Props {
@@ -6,7 +9,8 @@ interface Props {
   onSelect: (id: string) => void;
   onUpdate: (task: GanttTask) => void;
   onDelete: (id: string) => void;
-  onAdd: (section: string) => void;
+  onAdd: (section: string, position: InsertPosition) => void;
+  onMove: (id: string, direction: "up" | "down") => void;
   onAddSection: () => void;
 }
 
@@ -17,10 +21,24 @@ export function TaskEditor({
   onUpdate,
   onDelete,
   onAdd,
+  onMove,
   onAddSection,
 }: Props) {
   const selected = project.tasks.find((t) => t.id === selectedId) ?? null;
   const taskIds = project.tasks.map((t) => t.id);
+  const [addForSection, setAddForSection] = useState<string | null>(null);
+  const [insertPosition, setInsertPosition] = useState<InsertPosition>("end");
+
+  const openAddPanel = (section: string) => {
+    setAddForSection(section);
+    setInsertPosition("end");
+  };
+
+  const confirmAdd = () => {
+    if (!addForSection) return;
+    onAdd(addForSection, insertPosition);
+    setAddForSection(null);
+  };
 
   return (
     <aside className="task-editor">
@@ -69,6 +87,28 @@ export function TaskEditor({
               ))}
             </select>
           </label>
+
+          <div className="task-order-actions">
+            <span className="task-order-label">List order</span>
+            <button
+              type="button"
+              className="btn btn-small"
+              disabled={!canMoveTask(project.tasks, selected.id, "up")}
+              onClick={() => onMove(selected.id, "up")}
+              title="Move up in section"
+            >
+              ↑ Up
+            </button>
+            <button
+              type="button"
+              className="btn btn-small"
+              disabled={!canMoveTask(project.tasks, selected.id, "down")}
+              onClick={() => onMove(selected.id, "down")}
+              title="Move down in section"
+            >
+              ↓ Down
+            </button>
+          </div>
 
           <label>
             Duration (days)
@@ -184,39 +224,96 @@ export function TaskEditor({
       )}
 
       <div className="task-editor-list">
-      <div className="task-sections">
-        {project.sections.map((section) => {
-          const sectionTasks = project.tasks.filter((t) => t.section === section);
-          return (
-            <div key={section} className="task-section-block">
-              <div className="task-section-title">
-                <span>{section}</span>
-                <button type="button" className="btn btn-small" onClick={() => onAdd(section)}>
-                  + Task
-                </button>
+        <div className="task-sections">
+          {project.sections.map((section) => {
+            const sectionTasks = project.tasks.filter((t) => t.section === section);
+            const showAdd = addForSection === section;
+
+            return (
+              <div key={section} className="task-section-block">
+                <div className="task-section-title">
+                  <span>{section}</span>
+                  <button type="button" className="btn btn-small" onClick={() => openAddPanel(section)}>
+                    + Task
+                  </button>
+                </div>
+
+                {showAdd && (
+                  <div className="task-add-panel">
+                    <label>
+                      Insert position
+                      <select
+                        value={insertPosition}
+                        onChange={(e) => setInsertPosition(e.target.value as InsertPosition)}
+                      >
+                        <option value="start">At start of section</option>
+                        <option value="end">At end of section</option>
+                        {sectionTasks.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            After {t.id} — {t.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="task-add-actions">
+                      <button type="button" className="btn btn-small" onClick={confirmAdd}>
+                        Add task
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-small btn-ghost"
+                        onClick={() => setAddForSection(null)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <ul className="task-list">
+                  {sectionTasks.map((task) => (
+                    <li key={task.id} className="task-list-row">
+                      <div className="task-list-reorder">
+                        <button
+                          type="button"
+                          className="btn-reorder"
+                          disabled={!canMoveTask(project.tasks, task.id, "up")}
+                          onClick={() => onMove(task.id, "up")}
+                          title="Move up"
+                          aria-label={`Move ${task.name} up`}
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-reorder"
+                          disabled={!canMoveTask(project.tasks, task.id, "down")}
+                          onClick={() => onMove(task.id, "down")}
+                          title="Move down"
+                          aria-label={`Move ${task.name} down`}
+                        >
+                          ↓
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        className={`task-list-item ${selectedId === task.id ? "active" : ""}`}
+                        onClick={() => onSelect(task.id)}
+                      >
+                        <span className="task-id">{task.id}</span>
+                        <span className="task-name">{task.name}</span>
+                        <span className="task-meta">
+                          {task.durationDays}d
+                          {!task.startDate && (task.lagDays ?? 0) > 0 ? ` +${task.lagDays}d` : ""}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className="task-list">
-                {sectionTasks.map((task) => (
-                  <li key={task.id}>
-                    <button
-                      type="button"
-                      className={`task-list-item ${selectedId === task.id ? "active" : ""}`}
-                      onClick={() => onSelect(task.id)}
-                    >
-                      <span className="task-id">{task.id}</span>
-                      <span className="task-name">{task.name}</span>
-                      <span className="task-meta">
-                        {task.durationDays}d
-                        {!task.startDate && (task.lagDays ?? 0) > 0 ? ` +${task.lagDays}d` : ""}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
       </div>
     </aside>
   );

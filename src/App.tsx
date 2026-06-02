@@ -4,6 +4,7 @@ import { TaskEditor } from "./components/TaskEditor";
 import { DEFAULT_PROJECT, INITIAL_MERMAID } from "./initialData";
 import { parseMermaid, toMermaid } from "./mermaid";
 import { applyDragDates, computeSchedule } from "./schedule";
+import { insertTaskAt, moveTaskInList, type InsertPosition } from "./taskOrder";
 import { loadProject, loadServerProject, saveProject, saveServerProject } from "./storage";
 import type { GanttProject, GanttTask } from "./types";
 import "./App.css";
@@ -110,18 +111,36 @@ export default function App() {
     if (selectedId === id) setSelectedId(tasks[0]?.id ?? null);
   };
 
-  const handleAddTask = (section: string) => {
+  const handleMoveTask = (taskId: string, direction: "up" | "down") => {
+    updateProject({
+      ...project,
+      tasks: moveTaskInList(project.tasks, taskId, direction),
+    });
+  };
+
+  const handleAddTask = (section: string, position: InsertPosition = "end") => {
     const id = nextTaskId(project.tasks);
+    const sectionTasks = project.tasks.filter((t) => t.section === section);
+    const predecessor =
+      position === "start"
+        ? sectionTasks[0] ?? project.tasks[project.tasks.length - 1]
+        : position === "end"
+          ? sectionTasks[sectionTasks.length - 1] ?? project.tasks[project.tasks.length - 1]
+          : project.tasks.find((t) => t.id === position);
+
     const task: GanttTask = {
       id,
       name: "New task",
       section,
       durationDays: 3,
-      dependencies: project.tasks[0] ? [project.tasks[0].id] : [],
+      dependencies: predecessor ? [predecessor.id] : [],
       lagDays: 0,
       progress: 0,
     };
-    updateProject({ ...project, tasks: [...project.tasks, task] });
+    updateProject({
+      ...project,
+      tasks: insertTaskAt(project.tasks, task, position),
+    });
     setSelectedId(id);
   };
 
@@ -246,6 +265,7 @@ export default function App() {
           onUpdate={handleUpdateTask}
           onDelete={handleDelete}
           onAdd={handleAddTask}
+          onMove={handleMoveTask}
           onAddSection={handleAddSection}
         />
         <section className="chart-panel">

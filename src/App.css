@@ -189,6 +189,93 @@ body {
   padding: 0;
 }
 
+.task-list-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.2rem;
+}
+
+.task-list-reorder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.1rem;
+  flex-shrink: 0;
+}
+
+.btn-reorder {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  width: 1.5rem;
+  height: 1.1rem;
+  padding: 0;
+  font-size: 0.65rem;
+  line-height: 1;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.btn-reorder:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-reorder:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.task-list-row .task-list-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-add-panel {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.task-add-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.task-add-panel select {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.task-add-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.task-order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.task-order-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-right: 0.15rem;
+}
+
 .task-list-item {
   width: 100%;
   display: grid;
