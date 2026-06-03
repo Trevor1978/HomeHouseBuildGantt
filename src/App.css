@@ -46,6 +46,50 @@ body {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   box-shadow: var(--shadow);
+  flex-shrink: 0;
+}
+
+.header-primary {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.header-title-block {
+  min-width: 0;
+  flex: 1;
+}
+
+.header-primary-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.view-mode-select {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.header-menu-btn {
+  display: none;
+}
+
+.btn-icon {
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0.4rem;
 }
 
 .app-header h1 {
@@ -137,18 +181,79 @@ body {
   flex: 1;
   display: grid;
   grid-template-columns: minmax(280px, 340px) 1fr;
+  grid-template-rows: 1fr;
   min-height: 0;
   overflow: hidden;
 }
 
-.task-editor {
+.task-editor-shell {
+  grid-column: 1;
+  grid-row: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   border-right: 1px solid var(--border);
   background: var(--surface);
+}
+
+.task-editor-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.task-panel-toggle {
+  display: none;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: left;
+  min-height: 2.75rem;
+  color: var(--accent);
+  box-shadow: 0 -2px 8px rgb(28 25 23 / 6%);
+}
+
+.task-panel-toggle-label {
+  flex-shrink: 0;
+}
+
+.task-panel-summary {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+
+.task-panel-chevron {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.task-editor {
+  border-right: none;
+  background: transparent;
   display: flex;
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
   padding: 0.75rem;
+  flex: 1;
 }
 
 .task-editor-list {
@@ -371,6 +476,8 @@ body {
 }
 
 .chart-panel {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -408,17 +515,91 @@ body {
 }
 
 @media (max-width: 900px) {
-  .main-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: minmax(200px, 38vh) 1fr;
+  .app-header {
+    flex-direction: column;
+    gap: 0;
+    padding: 0.5rem 0.75rem;
   }
 
-  .task-editor {
+  .header-title-block h1 {
+    font-size: 0.95rem;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .subtitle {
+    display: none;
+  }
+
+  .header-menu-btn {
+    display: inline-flex;
+  }
+
+  .header-actions {
+    display: none;
+    width: 100%;
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .header-actions.open {
+    display: flex;
+  }
+
+  .header-actions .btn {
+    flex: 1 1 calc(50% - 0.25rem);
+    min-height: 2.5rem;
+    justify-content: center;
+  }
+
+  .main-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+  }
+
+  .chart-panel {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 0.25rem;
+  }
+
+  .task-editor-shell {
+    grid-column: 1;
+    grid-row: 2;
     border-right: none;
-    border-bottom: 1px solid var(--border);
+    border-top: none;
+  }
+
+  .main-layout.tasks-open {
+    grid-template-rows: minmax(28vh, 1fr) minmax(0, min(68vh, calc(100dvh - 3.5rem)));
+  }
+
+  .task-panel-toggle {
+    display: flex;
+  }
+
+  .task-editor-shell:not(.open) .task-editor-body {
+    display: none;
+  }
+
+  .task-editor-shell.open .task-editor-body {
+    max-height: calc(68vh - 2.75rem);
   }
 
   .task-form-top {
-    max-height: 22vh;
+    max-height: min(40vh, 320px);
+  }
+
+  .btn-reorder {
+    width: 1.75rem;
+    height: 1.35rem;
+    font-size: 0.75rem;
+  }
+
+  .task-list-item {
+    padding: 0.5rem 0.4rem;
   }
 }

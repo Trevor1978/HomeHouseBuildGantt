@@ -26,6 +26,17 @@ export default function App() {
   const [showMermaid, setShowMermaid] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
+  const [tasksOpen, setTasksOpen] = useState(false);
+
+  const selectedTask = project.tasks.find((t) => t.id === selectedId) ?? null;
+
+  const handleSelectTask = useCallback((id: string) => {
+    setSelectedId(id);
+    if (window.matchMedia("(max-width: 900px)").matches) {
+      setTasksOpen(true);
+    }
+  }, []);
 
   const scheduleResult = useMemo(() => {
     try {
@@ -142,6 +153,9 @@ export default function App() {
       tasks: insertTaskAt(project.tasks, task, position),
     });
     setSelectedId(id);
+    if (window.matchMedia("(max-width: 900px)").matches) {
+      setTasksOpen(true);
+    }
   };
 
   const handleAddSection = () => {
@@ -191,18 +205,36 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <div>
-          <h1>{project.title}</h1>
-          <p className="subtitle">
-            Drag bars to reschedule · click a bar or task to edit · auto-saved in browser
-          </p>
+        <div className="header-primary">
+          <div className="header-title-block">
+            <h1>{project.title}</h1>
+            <p className="subtitle">
+              Drag bars to reschedule · click a bar or task to edit · auto-saved in browser
+            </p>
+          </div>
+          <div className="header-primary-actions">
+            <select
+              className="view-mode-select"
+              value={viewMode}
+              onChange={(e) => setViewMode(e.target.value as typeof viewMode)}
+              aria-label="Chart view mode"
+            >
+              <option value="Day">Day</option>
+              <option value="Week">Week</option>
+              <option value="Month">Month</option>
+            </select>
+            <button
+              type="button"
+              className="btn btn-icon header-menu-btn"
+              aria-expanded={headerMenuOpen}
+              aria-label={headerMenuOpen ? "Close menu" : "Open menu"}
+              onClick={() => setHeaderMenuOpen((v) => !v)}
+            >
+              {headerMenuOpen ? "✕" : "☰"}
+            </button>
+          </div>
         </div>
-        <div className="header-actions">
-          <select value={viewMode} onChange={(e) => setViewMode(e.target.value as typeof viewMode)}>
-            <option value="Day">Day</option>
-            <option value="Week">Week</option>
-            <option value="Month">Month</option>
-          </select>
+        <div className={`header-actions ${headerMenuOpen ? "open" : ""}`}>
           <button type="button" className="btn" onClick={() => setShowMermaid((v) => !v)}>
             {showMermaid ? "Hide" : "Mermaid"}
           </button>
@@ -257,17 +289,7 @@ export default function App() {
         </div>
       )}
 
-      <main className="main-layout">
-        <TaskEditor
-          project={project}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-          onUpdate={handleUpdateTask}
-          onDelete={handleDelete}
-          onAdd={handleAddTask}
-          onMove={handleMoveTask}
-          onAddSection={handleAddSection}
-        />
+      <main className={`main-layout ${tasksOpen ? "tasks-open" : ""}`}>
         <section className="chart-panel">
           {scheduled.length > 0 ? (
             <GanttChart
@@ -275,12 +297,44 @@ export default function App() {
               viewMode={viewMode}
               onDateChange={handleDrag}
               onProgressChange={handleProgress}
-              onTaskClick={setSelectedId}
+              onTaskClick={handleSelectTask}
             />
           ) : (
             <p className="empty-chart">Fix schedule errors to view the chart.</p>
           )}
         </section>
+        <div className={`task-editor-shell ${tasksOpen ? "open" : ""}`}>
+          <button
+            type="button"
+            className="task-panel-toggle"
+            aria-expanded={tasksOpen}
+            onClick={() => setTasksOpen((v) => !v)}
+          >
+            <span className="task-panel-toggle-label">
+              {tasksOpen ? "Hide tasks" : "Tasks"}
+            </span>
+            {!tasksOpen && selectedTask && (
+              <span className="task-panel-summary">
+                {selectedTask.id} · {selectedTask.name}
+              </span>
+            )}
+            <span className="task-panel-chevron" aria-hidden="true">
+              {tasksOpen ? "▼" : "▲"}
+            </span>
+          </button>
+          <div className="task-editor-body">
+            <TaskEditor
+              project={project}
+              selectedId={selectedId}
+              onSelect={handleSelectTask}
+              onUpdate={handleUpdateTask}
+              onDelete={handleDelete}
+              onAdd={handleAddTask}
+              onMove={handleMoveTask}
+              onAddSection={handleAddSection}
+            />
+          </div>
+        </div>
       </main>
     </div>
   );
