@@ -23,7 +23,9 @@ html,
 body,
 #root {
   height: 100%;
+  height: 100dvh;
   overflow: hidden;
+  max-width: 100vw;
 }
 
 body {
@@ -32,6 +34,8 @@ body {
 
 .app {
   height: 100%;
+  height: 100dvh;
+  max-width: 100vw;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -47,6 +51,8 @@ body {
   border-bottom: 1px solid var(--border);
   box-shadow: var(--shadow);
   flex-shrink: 0;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .header-primary {
@@ -109,6 +115,8 @@ body {
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 .btn {
@@ -519,10 +527,18 @@ body {
     flex-direction: column;
     gap: 0;
     padding: 0.5rem 0.75rem;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .header-primary {
+    width: 100%;
+    max-width: 100%;
+    align-items: center;
   }
 
   .header-title-block h1 {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     line-height: 1.25;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -558,12 +574,19 @@ body {
   .main-layout {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr auto;
+    min-height: 0;
+  }
+
+  .main-layout.tasks-open {
+    /* Keep chart full height; task sheet overlays it */
+    grid-template-rows: 1fr 0;
   }
 
   .chart-panel {
     grid-column: 1;
     grid-row: 1;
     padding: 0.25rem;
+    min-height: 0;
   }
 
   .task-editor-shell {
@@ -571,14 +594,26 @@ body {
     grid-row: 2;
     border-right: none;
     border-top: none;
+    min-height: 0;
   }
 
-  .main-layout.tasks-open {
-    grid-template-rows: minmax(28vh, 1fr) minmax(0, min(68vh, calc(100dvh - 3.5rem)));
+  .task-editor-shell.open {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 100vw;
+    height: min(78dvh, calc(100dvh - 3.25rem));
+    z-index: 100;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -8px 24px rgb(28 25 23 / 14%);
+    border-top: 1px solid var(--border);
   }
 
   .task-panel-toggle {
     display: flex;
+    flex-shrink: 0;
   }
 
   .task-editor-shell:not(.open) .task-editor-body {
@@ -586,11 +621,22 @@ body {
   }
 
   .task-editor-shell.open .task-editor-body {
-    max-height: calc(68vh - 2.75rem);
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .task-editor-shell.open .task-editor {
+    overflow: visible;
+    flex: none;
+    min-height: min-content;
   }
 
   .task-form-top {
-    max-height: min(40vh, 320px);
+    max-height: none;
+    overflow: visible;
   }
 
   .btn-reorder {
@@ -601,5 +647,9 @@ body {
 
   .task-list-item {
     padding: 0.5rem 0.4rem;
+  }
+
+  .gantt-mount > .gantt-container {
+    max-width: 100%;
   }
 }
