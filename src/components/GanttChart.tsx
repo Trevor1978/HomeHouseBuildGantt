@@ -3,6 +3,12 @@ import Gantt from "frappe-gantt";
 import { formatDate } from "../dateUtils";
 import type { ScheduledTask } from "../types";
 
+type GanttInstance = Gantt & {
+  options: { container_height: number | "auto"; scroll_to: string | null };
+  change_view_mode: (mode?: unknown, maintainPos?: boolean) => void;
+  set_scroll_position: (date: string) => void;
+};
+
 interface Props {
   tasks: ScheduledTask[];
   viewMode: "Day" | "Week" | "Month";
@@ -20,6 +26,7 @@ export function GanttChart({
 }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const ganttRef = useRef<Gantt | null>(null);
+  const userScrollRef = useRef(false);
   const onDateChangeRef = useRef(onDateChange);
   const onProgressChangeRef = useRef(onProgressChange);
   const onTaskClickRef = useRef(onTaskClick);
@@ -44,15 +51,24 @@ export function GanttChart({
 
     const getScrollEl = () => mount.querySelector<HTMLElement>(".gantt-container");
 
+    const scrollToToday = (gantt: GanttInstance) => {
+      gantt.set_scroll_position("today");
+    };
+
+    const markUserScroll = () => {
+      userScrollRef.current = true;
+    };
+
     const applyContainerHeight = (height: number) => {
       if (!ganttRef.current || height < 120) return;
-      const gantt = ganttRef.current as Gantt & {
-        options: { container_height: number | "auto" };
-        change_view_mode: (mode?: unknown, maintainPos?: boolean) => void;
-      };
+      const gantt = ganttRef.current as GanttInstance;
       if (gantt.options.container_height === height) return;
       gantt.options.container_height = height;
-      gantt.change_view_mode(undefined, true);
+      const maintainPos = userScrollRef.current;
+      gantt.change_view_mode(undefined, maintainPos);
+      if (!maintainPos) {
+        requestAnimationFrame(() => scrollToToday(gantt));
+      }
     };
 
     if (!ganttRef.current) {
@@ -72,16 +88,29 @@ export function GanttChart({
           onTaskClickRef.current?.(task.id);
         },
       });
+      requestAnimationFrame(() => {
+        if (ganttRef.current) scrollToToday(ganttRef.current as GanttInstance);
+      });
     } else {
       const scrollEl = getScrollEl();
       const scrollLeft = scrollEl?.scrollLeft ?? 0;
+      const maintainPos = userScrollRef.current;
       ganttRef.current.refresh(frappeTasks);
-      if (scrollEl) scrollEl.scrollLeft = scrollLeft;
-      (ganttRef.current as Gantt & { change_view_mode: (m: unknown, p?: boolean) => void }).change_view_mode(
-        viewMode,
-        true
-      );
+      if (scrollEl && maintainPos) {
+        scrollEl.scrollLeft = scrollLeft;
+      }
+      (ganttRef.current as GanttInstance).change_view_mode(viewMode, maintainPos);
+      if (!maintainPos) {
+        requestAnimationFrame(() => {
+          if (ganttRef.current) scrollToToday(ganttRef.current as GanttInstance);
+        });
+      }
     }
+
+    const scrollEl = getScrollEl();
+    scrollEl?.addEventListener("wheel", markUserScroll, { passive: true });
+    scrollEl?.addEventListener("touchstart", markUserScroll, { passive: true });
+    scrollEl?.addEventListener("pointerdown", markUserScroll, { passive: true });
 
     const ro = new ResizeObserver((entries) => {
       const height = entries[0]?.contentRect.height;
@@ -89,7 +118,12 @@ export function GanttChart({
     });
     ro.observe(mount);
 
-    return () => ro.disconnect();
+    return () => {
+      ro.disconnect();
+      scrollEl?.removeEventListener("wheel", markUserScroll);
+      scrollEl?.removeEventListener("touchstart", markUserScroll);
+      scrollEl?.removeEventListener("pointerdown", markUserScroll);
+    };
   }, [tasks, viewMode]);
 
   return <div ref={mountRef} className="gantt-mount" />;
