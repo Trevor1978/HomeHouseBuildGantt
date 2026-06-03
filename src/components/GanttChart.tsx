@@ -61,7 +61,7 @@ export function GanttChart({
         bar_height: 28,
         padding: 20,
         infinite_padding: false,
-        scroll_to: "start",
+        scroll_to: "today",
         on_date_change: (task, start, end) => {
           onDateChangeRef.current(task.id, formatDate(start), formatDate(end));
         },
