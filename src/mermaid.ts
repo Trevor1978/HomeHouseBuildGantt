@@ -33,8 +33,12 @@ function parseTaskLine(line: string, section: string): GanttTask | null {
   if (/^\d{4}-\d{2}-\d{2}$/.test(schedule)) {
     startDate = schedule;
   } else if (schedule.toLowerCase().startsWith("after ")) {
-    const dep = schedule.slice(6).trim();
-    if (dep) dependencies.push(dep);
+    const depList = schedule
+      .slice(6)
+      .trim()
+      .split(/[\s,]+/)
+      .filter(Boolean);
+    dependencies.push(...depList);
   }
 
   return {
@@ -117,7 +121,7 @@ export function toMermaid(project: GanttProject): string {
       } else if (task.dependencies.length > 0) {
         const lag = task.lagDays ?? 0;
         const lagSuffix = lag > 0 ? `, +${lag}d` : "";
-        schedule = `after ${task.dependencies[0]}, ${task.durationDays}d${lagSuffix}`;
+        schedule = `after ${task.dependencies.join(" ")}, ${task.durationDays}d${lagSuffix}`;
       } else {
         schedule = `2026-01-01, ${task.durationDays}d`;
       }

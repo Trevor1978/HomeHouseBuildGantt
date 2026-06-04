@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { InsertPosition } from "../taskOrder";
-import { canMoveTask } from "../taskOrder";
+import { canMoveSection, canMoveTask } from "../taskOrder";
 import type { GanttProject, GanttTask } from "../types";
 
 interface Props {
@@ -11,6 +11,7 @@ interface Props {
   onDelete: (id: string) => void;
   onAdd: (section: string, position: InsertPosition) => void;
   onMove: (id: string, direction: "up" | "down") => void;
+  onMoveSection: (section: string, direction: "up" | "down") => void;
   onAddSection: () => void;
 }
 
@@ -22,6 +23,7 @@ export function TaskEditor({
   onDelete,
   onAdd,
   onMove,
+  onMoveSection,
   onAddSection,
 }: Props) {
   const selected = project.tasks.find((t) => t.id === selectedId) ?? null;
@@ -178,27 +180,40 @@ export function TaskEditor({
             </label>
             {!selected.startDate && (
               <>
-                <label>
-                  Depends on
-                  <select
-                    value={selected.dependencies[0] ?? ""}
-                    onChange={(e) =>
-                      onUpdate({
-                        ...selected,
-                        dependencies: e.target.value ? [e.target.value] : [],
-                      })
-                    }
-                  >
-                    <option value="">— select —</option>
-                    {taskIds
-                      .filter((id) => id !== selected.id)
-                      .map((id) => (
-                        <option key={id} value={id}>
-                          {id}
-                        </option>
-                      ))}
-                  </select>
-                </label>
+                <fieldset className="dependency-picker">
+                  <legend>Depends on (all must finish)</legend>
+                  {taskIds.filter((id) => id !== selected.id).length === 0 ? (
+                    <p className="dependency-empty">No other tasks to depend on.</p>
+                  ) : (
+                    <ul className="dependency-list">
+                      {taskIds
+                        .filter((id) => id !== selected.id)
+                        .map((id) => {
+                          const depTask = project.tasks.find((t) => t.id === id);
+                          return (
+                            <li key={id}>
+                              <label className="checkbox-row">
+                                <input
+                                  type="checkbox"
+                                  checked={selected.dependencies.includes(id)}
+                                  onChange={(e) => {
+                                    const deps = e.target.checked
+                                      ? [...selected.dependencies, id]
+                                      : selected.dependencies.filter((d) => d !== id);
+                                    onUpdate({ ...selected, dependencies: deps });
+                                  }}
+                                />
+                                <span>
+                                  <span className="task-id">{id}</span>{" "}
+                                  {depTask?.name ?? ""}
+                                </span>
+                              </label>
+                            </li>
+                          );
+                        })}
+                    </ul>
+                  )}
+                </fieldset>
                 <label>
                   Days after dependency ends
                   <input
@@ -232,7 +247,29 @@ export function TaskEditor({
             return (
               <div key={section} className="task-section-block">
                 <div className="task-section-title">
-                  <span>{section}</span>
+                  <div className="task-section-reorder">
+                    <button
+                      type="button"
+                      className="btn-reorder"
+                      disabled={!canMoveSection(project.sections, section, "up")}
+                      onClick={() => onMoveSection(section, "up")}
+                      title="Move section up"
+                      aria-label={`Move ${section} up`}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-reorder"
+                      disabled={!canMoveSection(project.sections, section, "down")}
+                      onClick={() => onMoveSection(section, "down")}
+                      title="Move section down"
+                      aria-label={`Move ${section} down`}
+                    >
+                      ↓
+                    </button>
+                  </div>
+                  <span className="task-section-name">{section}</span>
                   <button type="button" className="btn btn-small" onClick={() => openAddPanel(section)}>
                     + Task
                   </button>
@@ -305,6 +342,9 @@ export function TaskEditor({
                         <span className="task-meta">
                           {task.durationDays}d
                           {!task.startDate && (task.lagDays ?? 0) > 0 ? ` +${task.lagDays}d` : ""}
+                          {!task.startDate && task.dependencies.length > 0
+                            ? ` · after ${task.dependencies.join(", ")}`
+                            : ""}
                         </span>
                       </button>
                     </li>

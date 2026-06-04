@@ -290,10 +290,61 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.35rem;
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--accent);
   margin-bottom: 0.35rem;
+}
+
+.task-section-reorder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex-shrink: 0;
+}
+
+.task-section-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.dependency-picker {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  margin: 0.35rem 0;
+}
+
+.dependency-picker legend {
+  font-size: 0.78rem;
+  color: var(--muted);
+  padding: 0 0.2rem;
+}
+
+.dependency-list {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  max-height: 10rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dependency-list .checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.dependency-empty {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
 }
 
 .task-list {

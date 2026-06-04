@@ -4,7 +4,12 @@ import { TaskEditor } from "./components/TaskEditor";
 import { DEFAULT_PROJECT, INITIAL_MERMAID } from "./initialData";
 import { parseMermaid, toMermaid } from "./mermaid";
 import { applyDragDates, computeSchedule } from "./schedule";
-import { insertTaskAt, moveTaskInList, type InsertPosition } from "./taskOrder";
+import {
+  insertTaskAt,
+  moveSectionInList,
+  moveTaskInList,
+  type InsertPosition,
+} from "./taskOrder";
 import { loadProject, loadServerProject, saveProject, saveServerProject } from "./storage";
 import type { GanttProject, GanttTask } from "./types";
 import "./App.css";
@@ -127,6 +132,12 @@ export default function App() {
       ...project,
       tasks: moveTaskInList(project.tasks, taskId, direction),
     });
+  };
+
+  const handleMoveSection = (section: string, direction: "up" | "down") => {
+    const moved = moveSectionInList(project.sections, project.tasks, section, direction);
+    if (!moved) return;
+    updateProject({ ...project, sections: moved.sections, tasks: moved.tasks });
   };
 
   const handleAddTask = (section: string, position: InsertPosition = "end") => {
@@ -331,6 +342,7 @@ export default function App() {
               onDelete={handleDelete}
               onAdd={handleAddTask}
               onMove={handleMoveTask}
+              onMoveSection={handleMoveSection}
               onAddSection={handleAddSection}
             />
           </div>
