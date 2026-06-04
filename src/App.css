@@ -309,6 +309,38 @@ body {
   min-width: 0;
 }
 
+.task-section-name-btn {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: left;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.task-section-name-btn:hover {
+  text-decoration: underline;
+}
+
+.task-section-rename-input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.15rem 0.35rem;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+}
+
 .dependency-picker {
   border: 1px solid var(--border);
   border-radius: 6px;

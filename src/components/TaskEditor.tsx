@@ -12,6 +12,7 @@ interface Props {
   onAdd: (section: string, position: InsertPosition) => void;
   onMove: (id: string, direction: "up" | "down") => void;
   onMoveSection: (section: string, direction: "up" | "down") => void;
+  onRenameSection: (oldName: string, newName: string) => void;
   onAddSection: () => void;
 }
 
@@ -24,12 +25,15 @@ export function TaskEditor({
   onAdd,
   onMove,
   onMoveSection,
+  onRenameSection,
   onAddSection,
 }: Props) {
   const selected = project.tasks.find((t) => t.id === selectedId) ?? null;
   const taskIds = project.tasks.map((t) => t.id);
   const [addForSection, setAddForSection] = useState<string | null>(null);
   const [insertPosition, setInsertPosition] = useState<InsertPosition>("end");
+  const [renamingSection, setRenamingSection] = useState<string | null>(null);
+  const [sectionNameDraft, setSectionNameDraft] = useState("");
 
   const openAddPanel = (section: string) => {
     setAddForSection(section);
@@ -40,6 +44,25 @@ export function TaskEditor({
     if (!addForSection) return;
     onAdd(addForSection, insertPosition);
     setAddForSection(null);
+  };
+
+  const startRenameSection = (section: string) => {
+    setRenamingSection(section);
+    setSectionNameDraft(section);
+  };
+
+  const commitRenameSection = () => {
+    if (!renamingSection) return;
+    const trimmed = sectionNameDraft.trim();
+    if (trimmed && trimmed !== renamingSection) {
+      onRenameSection(renamingSection, trimmed);
+      if (addForSection === renamingSection) setAddForSection(trimmed);
+    }
+    setRenamingSection(null);
+  };
+
+  const cancelRenameSection = () => {
+    setRenamingSection(null);
   };
 
   return (
@@ -269,7 +292,32 @@ export function TaskEditor({
                       ↓
                     </button>
                   </div>
-                  <span className="task-section-name">{section}</span>
+                  {renamingSection === section ? (
+                    <input
+                      className="task-section-rename-input"
+                      value={sectionNameDraft}
+                      onChange={(e) => setSectionNameDraft(e.target.value)}
+                      onBlur={commitRenameSection}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          commitRenameSection();
+                        }
+                        if (e.key === "Escape") cancelRenameSection();
+                      }}
+                      aria-label="Section name"
+                      autoFocus
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      className="task-section-name-btn"
+                      onClick={() => startRenameSection(section)}
+                      title="Rename section"
+                    >
+                      {section}
+                    </button>
+                  )}
                   <button type="button" className="btn btn-small" onClick={() => openAddPanel(section)}>
                     + Task
                   </button>

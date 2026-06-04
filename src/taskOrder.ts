@@ -103,6 +103,22 @@ export function canMoveSection(
   return direction === "up" ? idx > 0 : idx < sections.length - 1;
 }
 
+export function renameSection(
+  sections: string[],
+  tasks: GanttTask[],
+  oldName: string,
+  newName: string
+): { sections: string[]; tasks: GanttTask[] } | null {
+  const trimmed = newName.trim();
+  if (!trimmed || trimmed === oldName) return null;
+  if (sections.some((s) => s === trimmed)) return null;
+
+  return {
+    sections: sections.map((s) => (s === oldName ? trimmed : s)),
+    tasks: tasks.map((t) => (t.section === oldName ? { ...t, section: trimmed } : t)),
+  };
+}
+
 export function moveSectionInList(
   sections: string[],
   tasks: GanttTask[],

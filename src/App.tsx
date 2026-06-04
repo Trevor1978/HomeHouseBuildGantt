@@ -8,6 +8,7 @@ import {
   insertTaskAt,
   moveSectionInList,
   moveTaskInList,
+  renameSection,
   type InsertPosition,
 } from "./taskOrder";
 import { loadProject, loadServerProject, saveProject, saveServerProject } from "./storage";
@@ -177,6 +178,19 @@ export default function App() {
     });
   };
 
+  const handleRenameSection = (oldName: string, newName: string) => {
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === oldName) return;
+    if (project.sections.includes(trimmed)) {
+      setError(`Section "${trimmed}" already exists`);
+      return;
+    }
+    const renamed = renameSection(project.sections, project.tasks, oldName, trimmed);
+    if (!renamed) return;
+    updateProject({ ...project, sections: renamed.sections, tasks: renamed.tasks });
+    setError(null);
+  };
+
   const applyMermaidImport = () => {
     try {
       const parsed = parseMermaid(mermaidText);
@@ -343,6 +357,7 @@ export default function App() {
               onAdd={handleAddTask}
               onMove={handleMoveTask}
               onMoveSection={handleMoveSection}
+              onRenameSection={handleRenameSection}
               onAddSection={handleAddSection}
             />
           </div>
