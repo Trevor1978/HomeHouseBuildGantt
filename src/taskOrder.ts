@@ -119,6 +119,28 @@ export function renameSection(
   };
 }
 
+export function deleteSection(
+  sections: string[],
+  tasks: GanttTask[],
+  section: string
+): { sections: string[]; tasks: GanttTask[]; removedTaskIds: string[] } | null {
+  if (!sections.includes(section)) return null;
+
+  const removedTaskIds = tasks.filter((t) => t.section === section).map((t) => t.id);
+  const removedSet = new Set(removedTaskIds);
+
+  return {
+    sections: sections.filter((s) => s !== section),
+    tasks: tasks
+      .filter((t) => t.section !== section)
+      .map((t) => ({
+        ...t,
+        dependencies: t.dependencies.filter((d) => !removedSet.has(d)),
+      })),
+    removedTaskIds,
+  };
+}
+
 export function moveSectionInList(
   sections: string[],
   tasks: GanttTask[],

@@ -13,6 +13,7 @@ interface Props {
   onMove: (id: string, direction: "up" | "down") => void;
   onMoveSection: (section: string, direction: "up" | "down") => void;
   onRenameSection: (oldName: string, newName: string) => void;
+  onDeleteSection: (section: string) => void;
   onAddSection: () => void;
 }
 
@@ -26,6 +27,7 @@ export function TaskEditor({
   onMove,
   onMoveSection,
   onRenameSection,
+  onDeleteSection,
   onAddSection,
 }: Props) {
   const selected = project.tasks.find((t) => t.id === selectedId) ?? null;
@@ -318,9 +320,20 @@ export function TaskEditor({
                       {section}
                     </button>
                   )}
-                  <button type="button" className="btn btn-small" onClick={() => openAddPanel(section)}>
-                    + Task
-                  </button>
+                  <div className="task-section-actions">
+                    <button type="button" className="btn btn-small" onClick={() => openAddPanel(section)}>
+                      + Task
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-small btn-danger-ghost"
+                      onClick={() => onDeleteSection(section)}
+                      title="Delete section"
+                      aria-label={`Delete ${section}`}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
 
                 {showAdd && (

@@ -9,6 +9,7 @@ import {
   moveSectionInList,
   moveTaskInList,
   renameSection,
+  deleteSection,
   type InsertPosition,
 } from "./taskOrder";
 import { loadProject, loadServerProject, saveProject, saveServerProject } from "./storage";
@@ -191,6 +192,24 @@ export default function App() {
     setError(null);
   };
 
+  const handleDeleteSection = (section: string) => {
+    const sectionTasks = project.tasks.filter((t) => t.section === section);
+    const message =
+      sectionTasks.length === 0
+        ? `Delete section "${section}"?`
+        : `Delete section "${section}" and its ${sectionTasks.length} task${sectionTasks.length === 1 ? "" : "s"}?`;
+    if (!confirm(message)) return;
+
+    const deleted = deleteSection(project.sections, project.tasks, section);
+    if (!deleted) return;
+
+    updateProject({ ...project, sections: deleted.sections, tasks: deleted.tasks });
+    if (selectedId && deleted.removedTaskIds.includes(selectedId)) {
+      setSelectedId(deleted.tasks[0]?.id ?? null);
+    }
+    setError(null);
+  };
+
   const applyMermaidImport = () => {
     try {
       const parsed = parseMermaid(mermaidText);
@@ -358,6 +377,7 @@ export default function App() {
               onMove={handleMoveTask}
               onMoveSection={handleMoveSection}
               onRenameSection={handleRenameSection}
+              onDeleteSection={handleDeleteSection}
               onAddSection={handleAddSection}
             />
           </div>
